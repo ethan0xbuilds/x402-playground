@@ -1,7 +1,6 @@
 import os
 import time
 from eth_account import Account
-from eth_account.messages import encode_typed_data
 
 from config import (
     DEMO_PRIVATE_KEY,
@@ -10,23 +9,13 @@ from config import (
     CHAIN_ID,
     ASSET_ADDRESS,
 )
+from crypto import _MESSAGE_TYPES
 
 _DOMAIN_DATA = {
     "name": "USD Coin",
     "version": "2",
     "chainId": CHAIN_ID,
     "verifyingContract": ASSET_ADDRESS,
-}
-
-_MESSAGE_TYPES = {
-    "TransferWithAuthorization": [
-        {"name": "from", "type": "address"},
-        {"name": "to", "type": "address"},
-        {"name": "value", "type": "uint256"},
-        {"name": "validAfter", "type": "uint256"},
-        {"name": "validBefore", "type": "uint256"},
-        {"name": "nonce", "type": "bytes32"},
-    ]
 }
 
 
@@ -60,8 +49,8 @@ def make_signed_payload(
         "from": from_addr,
         "to": to_addr,
         "value": str(value),
-        "validAfter": now + validAfter_offset,
-        "validBefore": now + validBefore_offset,
+        "validAfter": str(now + validAfter_offset),
+        "validBefore": str(now + validBefore_offset),
         "nonce": nonce,
     }
     message_data = _payload_to_message_data(payload)

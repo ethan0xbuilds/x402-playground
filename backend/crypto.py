@@ -21,6 +21,8 @@ def build_structured_data(payload: dict, chain_id: int, asset_address: str) -> d
     """
     nonce_hex = payload["nonce"].removeprefix("0x").removeprefix("0X")
     nonce_bytes = bytes.fromhex(nonce_hex)
+    if len(nonce_bytes) != 32:
+        raise ValueError(f"nonce must be 32 bytes, got {len(nonce_bytes)}")
     domain_data = {
         "name": "USD Coin",
         "version": "2",
