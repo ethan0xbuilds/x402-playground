@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>x402 Protocol — Interactive Demo</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <div class="header-inner">
+      <h1>x402 <span class="accent">Payment Protocol</span></h1>
+      <p class="subtitle">Interactive HTTP Handshake Demo — click through each step</p>
+      <div class="step-indicator" id="step-indicator">
+        <div class="step-dot" data-step="1"><span>1</span></div>
+        <div class="step-connector"></div>
+        <div class="step-dot" data-step="2"><span>2</span></div>
+        <div class="step-connector"></div>
+        <div class="step-dot" data-step="3"><span>3</span></div>
+        <div class="step-connector"></div>
+        <div class="step-dot" data-step="4"><span>4</span></div>
+        <div class="step-connector"></div>
+        <div class="step-dot" data-step="5"><span>5</span></div>
+        <div class="step-connector"></div>
+        <div class="step-dot" data-step="6"><span>6</span></div>
+        <div class="step-connector"></div>
+        <div class="step-dot" data-step="7"><span>7</span></div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <div class="columns">
+      <div class="column" id="col-client">
+        <div class="column-header">
+          <div class="col-icon">🖥</div>
+          <h2>CLIENT</h2>
+          <p class="col-role">Browser</p>
+        </div>
+        <div class="messages" id="client-messages"></div>
+      </div>
+
+      <div class="column" id="col-server">
+        <div class="column-header">
+          <div class="col-icon">⚡</div>
+          <h2>YOUR SERVER</h2>
+          <p class="col-role">FastAPI</p>
+        </div>
+        <div class="messages" id="server-messages"></div>
+      </div>
+
+      <div class="column" id="col-facilitator">
+        <div class="column-header">
+          <div class="col-icon">🔐</div>
+          <h2>FACILITATOR</h2>
+          <p class="col-role">Mock Verifier</p>
+        </div>
+        <div class="messages" id="facilitator-messages"></div>
+      </div>
+    </div>
+
+    <div class="action-area">
+      <div class="step-label" id="step-label">Step 1 of 7</div>
+      <div class="step-desc" id="step-desc">Send a request to the weather API without any payment.</div>
+      <div class="action-buttons">
+        <button class="btn-next" id="next-btn">Send Request →</button>
+        <button class="btn-replay hidden" id="replay-btn">⚠ Try Replay Attack</button>
+        <button class="btn-reset hidden" id="reset-btn">↺ Start Over</button>
+      </div>
+    </div>
+  </main>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.13.4/ethers.umd.min.js"
+          integrity="sha512-S1EqDE27Kg9IOYWIGaDBEqRZfDrYqZ/e0/UPRk1oN01HWHVBKKnkjTNnZN9TqxZh7fGIFp7OjBBFqO9kDVKtQ=="
+          crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script src="app.js"></script>
+</body>
+</html>
