@@ -1,6 +1,6 @@
 // ─── Config ───────────────────────────────────────────────────────────────────
-const API_BASE = 'http://localhost:8000'; // dev
-// const API_BASE = 'https://api.oasaka.xyz'; // production
+// const API_BASE = 'http://localhost:8000'; // dev
+const API_BASE = 'https://api.oasaka.xyz'; // production
 
 // Demo wallet — Hardhat default test key, publicly known, no real assets
 const DEMO_PRIVATE_KEY = '0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80';
