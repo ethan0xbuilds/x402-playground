@@ -186,9 +186,114 @@ $('next-btn').addEventListener('click', async () => {
   }
 });
 
-// Steps 3–7 stubbed — implemented in Tasks 7 and 8
-async function runStep3() { setNextBtn('Next →'); }
-async function runStep4() { setNextBtn('Next →'); }
+// ─── Step 3: Build EIP-3009 signature ────────────────────────────────────────
+async function runStep3() {
+  setNextBtn('Signing…', true);
+
+  const now = Math.floor(Date.now() / 1000);
+  const nonce = ethers.hexlify(ethers.randomBytes(32));
+  const amount = BigInt(paymentRequirement.accepts[0].maxAmountRequired);
+
+  const message = {
+    from:        DEMO_CLIENT_ADDRESS,
+    to:          DEMO_PAY_TO_ADDRESS,
+    value:       amount,
+    validAfter:  BigInt(now - 10),
+    validBefore: BigInt(now + 300),
+    nonce:       nonce,
+  };
+
+  const wallet = new ethers.Wallet(DEMO_PRIVATE_KEY);
+  const signature = await wallet.signTypedData(DOMAIN, EIP3009_TYPES, message);
+
+  lastPayload = {
+    from:        DEMO_CLIENT_ADDRESS,
+    to:          DEMO_PAY_TO_ADDRESS,
+    value:       String(amount),
+    validAfter:  String(now - 10),
+    validBefore: String(now + 300),
+    nonce:       nonce,
+    signature:   signature,
+  };
+  lastXPayment = btoa(JSON.stringify(lastPayload));
+
+  // Show fields appearing one by one
+  const fields = [
+    ['from',        DEMO_CLIENT_ADDRESS],
+    ['to',          DEMO_PAY_TO_ADDRESS],
+    ['value',       String(amount)],
+    ['validAfter',  String(now - 10)],
+    ['validBefore', String(now + 300)],
+    ['nonce',       nonce],
+    ['signature',   signature],
+  ];
+
+  const col = $('client-messages');
+  const card = document.createElement('div');
+  card.className = 'terminal-card';
+  card.innerHTML = `
+    <div class="terminal-titlebar">
+      <div class="dot dot-red"></div><div class="dot dot-yellow"></div><div class="dot dot-green"></div>
+      <span class="terminal-title">EIP-3009 Payload</span>
+    </div>
+    <div class="terminal-body" id="payload-body">{</div>`;
+  col.appendChild(card);
+
+  const body = card.querySelector('#payload-body');
+  for (let i = 0; i < fields.length; i++) {
+    await new Promise(r => setTimeout(r, 200));
+    const [k, v] = fields[i];
+    const comma = i < fields.length - 1 ? ',' : '';
+    body.innerHTML += `\n  ${hl('key', `"${k}"`)}: ${hl('str', `"${escHtml(v)}"` )}${comma}`;
+  }
+  await new Promise(r => setTimeout(r, 200));
+  body.innerHTML += '\n}';
+
+  addAnnotation('client', `
+    <strong>EIP-3009 TransferWithAuthorization</strong> — 链下授权转账标准。<br>
+    <strong>validAfter / validBefore</strong> — 签名时间窗口，防止无限期有效的授权。<br>
+    <strong>nonce</strong> — 随机 32 字节，每次签名唯一，防止重放攻击。<br>
+    <strong>signature</strong> — EIP-712 结构化数据签名，由客户端私钥生成。<br>
+    整个 payload 将 Base64 编码后放入 <code>X-PAYMENT</code> 请求头。
+  `);
+
+  setStepUI(4);
+  currentStep = 4;
+  $('step-desc').textContent = STEP_DESCS[4];
+  setNextBtn('Next: Send Payment →');
+}
+
+// ─── Step 4: Re-request with X-PAYMENT header ────────────────────────────────
+async function runStep4() {
+  setNextBtn('Sending…', true);
+
+  addCard('client', 'HTTP Request (with payment)', `\
+${hl('method', 'GET')} ${hl('path', '/api/server/weather')} ${hl('version', 'HTTP/1.1')}
+${hl('header-name', 'Host')}: ${hl('header-val', 'api.oasaka.xyz')}
+${hl('header-name', 'Accept')}: ${hl('header-val', 'application/json')}
+${hl('header-name', 'X-PAYMENT')}: ${hl('header-val', lastXPayment.slice(0, 40) + '…')}`);
+
+  addAnnotation('client', `
+    <strong>X-PAYMENT</strong> — x402 协议定义的请求头，值为上一步 payload 的 Base64 编码。<br>
+    服务器收到后会解码，提取支付信息，并调用 Facilitator 做签名验证。
+  `);
+
+  const resp = await fetch(`${API_BASE}/api/server/weather`, {
+    headers: { 'X-PAYMENT': lastXPayment },
+  });
+  const data = await resp.json();
+
+  if (resp.status === 200) {
+    // Save response data for step 7
+    window._weatherData = data;
+    window._receiptHeader = resp.headers.get('X-Payment-Receipt') || 'receipt-' + Date.now();
+  }
+
+  setStepUI(5);
+  currentStep = 5;
+  $('step-desc').textContent = STEP_DESCS[5];
+  setNextBtn('Next: See Verification →');
+}
 function runStep5() { setNextBtn('Next →'); }
 async function runStep6() { setNextBtn('Next →'); }
 function runStep7done() {}
