@@ -294,13 +294,134 @@ ${hl('header-name', 'X-PAYMENT')}: ${hl('header-val', lastXPayment.slice(0, 40) 
   $('step-desc').textContent = STEP_DESCS[5];
   setNextBtn('Next: See Verification →');
 }
-function runStep5() { setNextBtn('Next →'); }
-async function runStep6() { setNextBtn('Next →'); }
-function runStep7done() {}
+// ─── Step 5: Show server→facilitator internal call ───────────────────────────
+function runStep5() {
+  addCard('server', 'Internal: Server → Facilitator', `\
+${hl('method', 'POST')} ${hl('path', '/api/facilitator/verify')} ${hl('version', 'HTTP/1.1')}
+${hl('header-name', 'Content-Type')}: ${hl('header-val', 'application/json')}
 
-// ─── Replay / Reset (stubbed — wired in Task 8) ───────────────────────────────
-$('replay-btn').addEventListener('click', () => {});
-$('reset-btn').addEventListener('click', () => {});
+${hlJson({
+  from: lastPayload.from,
+  to: lastPayload.to,
+  value: lastPayload.value,
+  validAfter: lastPayload.validAfter,
+  validBefore: lastPayload.validBefore,
+  nonce: lastPayload.nonce.slice(0, 18) + '…',
+  signature: lastPayload.signature.slice(0, 18) + '…',
+})}`);
+
+  addAnnotation('server', `
+    <strong>Server 不自己验签</strong> — 它把解码后的 payload 转发给 Facilitator，<br>
+    由 Facilitator 执行 6 条验证，返回 <code>{"valid": true/false}</code>。<br>
+    这种设计让验证逻辑可以独立部署、单独扩展。
+  `);
+
+  setStepUI(6);
+  currentStep = 6;
+  $('step-desc').textContent = STEP_DESCS[6];
+  setNextBtn('Next: Run Checks →');
+}
+
+// ─── Step 6: Show facilitator verification checks ────────────────────────────
+async function runStep6() {
+  setNextBtn('Verifying…', true);
+
+  // Call facilitator directly so we get the checks array
+  const resp = await fetch(`${API_BASE}/api/facilitator/verify`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(lastPayload),
+  });
+  const result = await resp.json();
+
+  for (let i = 0; i < result.checks.length; i++) {
+    await addCheckItem('facilitator', result.checks[i].name, result.checks[i].passed, i * 250);
+  }
+
+  await new Promise(r => setTimeout(r, result.checks.length * 250 + 100));
+
+  addAnnotation('facilitator', `
+    <strong>6 条验证全部通过</strong><br>
+    ① 字段完整性 ② 时效性 ③ 金额 ④ 收款地址 ⑤ EIP-712 签名 ⑥ Nonce 去重<br>
+    Nonce 记录后即失效，同一 nonce 无法二次使用。
+  `);
+
+  setStepUI(7);
+  currentStep = 7;
+  $('step-desc').textContent = STEP_DESCS[7];
+  setNextBtn('Next: Get Weather Data →');
+}
+
+// ─── Step 7: Show final 200 response ─────────────────────────────────────────
+function runStep7done() {
+  const data = window._weatherData || {
+    city: 'Hangzhou', temperature: 22, condition: 'Partly cloudy',
+    paid_with: '0.01 USDC', message: 'Payment verified. Thank you!',
+  };
+  const receipt = window._receiptHeader || 'receipt-demo';
+
+  const card = addCard('server', 'HTTP 200 OK ✓', `\
+${hl('version', 'HTTP/1.1')} ${hl('status-200', '200 OK')}
+${hl('header-name', 'Content-Type')}: ${hl('header-val', 'application/json')}
+${hl('header-name', 'X-Payment-Receipt')}: ${hl('header-val', receipt.slice(0, 20) + '…')}
+
+${hlJson(data)}`);
+  card.classList.add('success-pulse');
+
+  addAnnotation('server', `
+    <strong>X-Payment-Receipt</strong> — 服务器签发的收据 token，客户端可用于对账。<br>
+    整个握手完成：Client 支付 → Server 验证 → Facilitator 确认 → Server 放行数据。<br>
+    <strong>这就是 x402 协议的完整流程。</strong>
+  `);
+
+  // Mark all steps done
+  document.querySelectorAll('.step-dot').forEach(dot => {
+    dot.classList.remove('active');
+    dot.classList.add('done');
+  });
+
+  $('step-label').textContent = 'Complete!';
+  $('step-desc').textContent = '🎉 All 7 steps done. Want to try a replay attack?';
+  $('next-btn').classList.add('hidden');
+  $('replay-btn').classList.remove('hidden');
+  $('reset-btn').classList.remove('hidden');
+
+  currentStep = 8;
+}
+
+// ─── Replay attack ────────────────────────────────────────────────────────────
+$('replay-btn').addEventListener('click', async () => {
+  $('replay-btn').disabled = true;
+  $('replay-btn').textContent = 'Replaying…';
+
+  // Reuse the same payload (same nonce)
+  const resp = await fetch(`${API_BASE}/api/facilitator/verify`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(lastPayload),
+  });
+  const result = await resp.json();
+
+  addCard('facilitator', '⚠ Replay Attempt', `\
+${hl('status-402', 'REJECTED')}
+
+${hlJson(result)}`);
+
+  addAnnotation('facilitator', `
+    <strong>防重放攻击成功拦截！</strong><br>
+    Facilitator 记录了已使用的 nonce，相同 nonce 的二次提交直接拒绝。<br>
+    攻击者截获 X-PAYMENT 报文后无法重放使用。
+  `);
+
+  $('replay-btn').textContent = '⚠ Try Replay Attack';
+  $('replay-btn').disabled = false;
+});
+
+// ─── Reset ────────────────────────────────────────────────────────────────────
+$('reset-btn').addEventListener('click', async () => {
+  await fetch(`${API_BASE}/api/demo/reset`);
+  location.reload();
+});
 
 // ─── Init ─────────────────────────────────────────────────────────────────────
 setStepUI(1);
