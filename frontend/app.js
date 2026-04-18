@@ -94,7 +94,7 @@ function hlJson(obj, indent = 2) {
 }
 
 function setStepUI(step) {
-  $('step-label').textContent = `Step ${step} of 7`;
+  $('step-label').textContent = `第 ${step} 步，共 7 步`;
   document.querySelectorAll('.step-dot').forEach(dot => {
     const n = parseInt(dot.dataset.step);
     dot.classList.remove('done', 'active');
@@ -111,21 +111,21 @@ function setNextBtn(label, disabled = false) {
 
 // ─── Step descriptions ────────────────────────────────────────────────────────
 const STEP_DESCS = {
-  1: 'Send a request to the weather API without any payment header.',
-  2: 'The server responds with 402 Payment Required and tells us what it needs.',
-  3: 'Build an EIP-3009 TransferWithAuthorization signature in the browser.',
-  4: 'Re-send the request with the signed payment in the X-PAYMENT header.',
-  5: 'The server forwards the payment to the Facilitator for verification.',
-  6: 'The Facilitator runs 6 checks on the payment payload.',
-  7: 'All checks passed — the server returns the weather data.',
+  1: '向天气 API 发送一个不带支付头的请求。',
+  2: '服务器返回 402 Payment Required，告知客户端所需的支付参数。',
+  3: '在浏览器中构造 EIP-3009 TransferWithAuthorization 签名。',
+  4: '携带 X-PAYMENT 请求头重新发送请求。',
+  5: '服务器将支付信息转发给 Facilitator 进行验证。',
+  6: 'Facilitator 对支付 payload 执行 6 项校验。',
+  7: '全部校验通过 — 服务器返回天气数据。',
 };
 
 // ─── Step 1: Send unauthenticated request ─────────────────────────────────────
 async function runStep1() {
-  setNextBtn('Running…', true);
+  setNextBtn('运行中…', true);
 
   // Show outgoing request card
-  addCard('client', 'HTTP Request', `\
+  addCard('client', 'HTTP 请求', `\
 ${hl('method', 'GET')} ${hl('path', '/api/server/weather')} ${hl('version', 'HTTP/1.1')}
 ${hl('header-name', 'Host')}: ${hl('header-val', 'api.oasaka.xyz')}
 ${hl('header-name', 'Accept')}: ${hl('header-val', 'application/json')}`);
@@ -145,7 +145,7 @@ ${hlJson(data)}`);
     setStepUI(2);
     currentStep = 2;
     $('step-desc').textContent = STEP_DESCS[2];
-    setNextBtn('Next: Inspect Response →');
+    setNextBtn('下一步：查看响应 →');
   }
 }
 
@@ -166,7 +166,7 @@ function runStep2() {
   setStepUI(3);
   currentStep = 3;
   $('step-desc').textContent = STEP_DESCS[3];
-  setNextBtn('Next: Sign Payment →');
+  setNextBtn('下一步：签名支付 →');
 }
 
 // ─── Step runner ─────────────────────────────────────────────────────────────
@@ -181,14 +181,14 @@ $('next-btn').addEventListener('click', async () => {
     else if (currentStep === 7) runStep7done();
   } catch (err) {
     console.error(err);
-    addAnnotation('client', `<strong style="color:var(--red)">Error:</strong> ${escHtml(err.message)}`);
+    addAnnotation('client', `<strong style="color:var(--red)">错误：</strong> ${escHtml(err.message)}`);
     setNextBtn('Retry →', false);
   }
 });
 
 // ─── Step 3: Build EIP-3009 signature ────────────────────────────────────────
 async function runStep3() {
-  setNextBtn('Signing…', true);
+  setNextBtn('签名中…', true);
 
   const now = Math.floor(Date.now() / 1000);
   const nonce = ethers.hexlify(ethers.randomBytes(32));
@@ -260,14 +260,14 @@ async function runStep3() {
   setStepUI(4);
   currentStep = 4;
   $('step-desc').textContent = STEP_DESCS[4];
-  setNextBtn('Next: Send Payment →');
+  setNextBtn('下一步：发送支付 →');
 }
 
 // ─── Step 4: Re-request with X-PAYMENT header ────────────────────────────────
 async function runStep4() {
-  setNextBtn('Sending…', true);
+  setNextBtn('发送中…', true);
 
-  addCard('client', 'HTTP Request (with payment)', `\
+  addCard('client', 'HTTP 请求（含支付头）', `\
 ${hl('method', 'GET')} ${hl('path', '/api/server/weather')} ${hl('version', 'HTTP/1.1')}
 ${hl('header-name', 'Host')}: ${hl('header-val', 'api.oasaka.xyz')}
 ${hl('header-name', 'Accept')}: ${hl('header-val', 'application/json')}
@@ -292,11 +292,11 @@ ${hl('header-name', 'X-PAYMENT')}: ${hl('header-val', lastXPayment.slice(0, 40) 
   setStepUI(5);
   currentStep = 5;
   $('step-desc').textContent = STEP_DESCS[5];
-  setNextBtn('Next: See Verification →');
+  setNextBtn('下一步：查看验证 →');
 }
 // ─── Step 5: Show server→facilitator internal call ───────────────────────────
 function runStep5() {
-  addCard('server', 'Internal: Server → Facilitator', `\
+  addCard('server', '内部调用：服务器 → 验证方', `\
 ${hl('method', 'POST')} ${hl('path', '/api/facilitator/verify')} ${hl('version', 'HTTP/1.1')}
 ${hl('header-name', 'Content-Type')}: ${hl('header-val', 'application/json')}
 
@@ -319,12 +319,12 @@ ${hlJson({
   setStepUI(6);
   currentStep = 6;
   $('step-desc').textContent = STEP_DESCS[6];
-  setNextBtn('Next: Run Checks →');
+  setNextBtn('下一步：执行校验 →');
 }
 
 // ─── Step 6: Show facilitator verification checks ────────────────────────────
 async function runStep6() {
-  setNextBtn('Verifying…', true);
+  setNextBtn('验证中…', true);
 
   // Call facilitator directly so we get the checks array
   const resp = await fetch(`${API_BASE}/api/facilitator/verify`, {
@@ -349,7 +349,7 @@ async function runStep6() {
   setStepUI(7);
   currentStep = 7;
   $('step-desc').textContent = STEP_DESCS[7];
-  setNextBtn('Next: Get Weather Data →');
+  setNextBtn('下一步：获取天气数据 →');
 }
 
 // ─── Step 7: Show final 200 response ─────────────────────────────────────────
@@ -380,8 +380,8 @@ ${hlJson(data)}`);
     dot.classList.add('done');
   });
 
-  $('step-label').textContent = 'Complete!';
-  $('step-desc').textContent = '🎉 All 7 steps done. Want to try a replay attack?';
+  $('step-label').textContent = '完成！';
+  $('step-desc').textContent = '🎉 7 步全部完成。要试试重放攻击吗？';
   $('next-btn').classList.add('hidden');
   $('replay-btn').classList.remove('hidden');
   $('reset-btn').classList.remove('hidden');
@@ -392,7 +392,7 @@ ${hlJson(data)}`);
 // ─── Replay attack ────────────────────────────────────────────────────────────
 $('replay-btn').addEventListener('click', async () => {
   $('replay-btn').disabled = true;
-  $('replay-btn').textContent = 'Replaying…';
+  $('replay-btn').textContent = '重放中…';
 
   // Reuse the same payload (same nonce)
   const resp = await fetch(`${API_BASE}/api/facilitator/verify`, {
@@ -402,7 +402,7 @@ $('replay-btn').addEventListener('click', async () => {
   });
   const result = await resp.json();
 
-  addCard('facilitator', '⚠ Replay Attempt', `\
+  addCard('facilitator', '⚠ 重放攻击尝试', `\
 ${hl('status-402', 'REJECTED')}
 
 ${hlJson(result)}`);
@@ -413,7 +413,7 @@ ${hlJson(result)}`);
     攻击者截获 X-PAYMENT 报文后无法重放使用。
   `);
 
-  $('replay-btn').textContent = '⚠ Try Replay Attack';
+  $('replay-btn').textContent = '⚠ 尝试重放攻击';
   $('replay-btn').disabled = false;
 });
 

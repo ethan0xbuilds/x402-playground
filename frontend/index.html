@@ -1,16 +1,16 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>x402 Protocol — Interactive Demo</title>
+  <title>x402 协议 — 交互式演示</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <header>
     <div class="header-inner">
       <h1>x402 <span class="accent">Payment Protocol</span></h1>
-      <p class="subtitle">Interactive HTTP Handshake Demo — click through each step</p>
+      <p class="subtitle">HTTP 支付握手交互演示 — 逐步点击体验完整流程</p>
       <div class="step-indicator" id="step-indicator">
         <div class="step-dot" data-step="1"><span>1</span></div>
         <div class="step-connector"></div>
@@ -34,8 +34,8 @@
       <div class="column" id="col-client">
         <div class="column-header">
           <div class="col-icon">🖥</div>
-          <h2>CLIENT</h2>
-          <p class="col-role">Browser</p>
+          <h2>客户端</h2>
+          <p class="col-role">浏览器</p>
         </div>
         <div class="messages" id="client-messages"></div>
       </div>
@@ -43,7 +43,7 @@
       <div class="column" id="col-server">
         <div class="column-header">
           <div class="col-icon">⚡</div>
-          <h2>YOUR SERVER</h2>
+          <h2>你的服务器</h2>
           <p class="col-role">FastAPI</p>
         </div>
         <div class="messages" id="server-messages"></div>
@@ -53,19 +53,19 @@
         <div class="column-header">
           <div class="col-icon">🔐</div>
           <h2>FACILITATOR</h2>
-          <p class="col-role">Mock Verifier</p>
+          <p class="col-role">模拟验证方</p>
         </div>
         <div class="messages" id="facilitator-messages"></div>
       </div>
     </div>
 
     <div class="action-area">
-      <div class="step-label" id="step-label">Step 1 of 7</div>
-      <div class="step-desc" id="step-desc">Send a request to the weather API without any payment.</div>
+      <div class="step-label" id="step-label">第 1 步，共 7 步</div>
+      <div class="step-desc" id="step-desc">向天气 API 发送一个不带支付头的请求。</div>
       <div class="action-buttons">
-        <button class="btn-next" id="next-btn">Send Request →</button>
-        <button class="btn-replay hidden" id="replay-btn">⚠ Try Replay Attack</button>
-        <button class="btn-reset hidden" id="reset-btn">↺ Start Over</button>
+        <button class="btn-next" id="next-btn">发送请求 →</button>
+        <button class="btn-replay hidden" id="replay-btn">⚠ 尝试重放攻击</button>
+        <button class="btn-reset hidden" id="reset-btn">↺ 重新开始</button>
       </div>
     </div>
   </main>
