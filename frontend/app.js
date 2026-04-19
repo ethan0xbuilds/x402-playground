@@ -278,6 +278,14 @@ ${hl('header-name', 'X-PAYMENT')}: ${hl('header-val', lastXPayment.slice(0, 40) 
     服务器收到后会解码，提取支付信息，并调用 Facilitator 做签名验证。
   `);
 
+  // Pre-fetch facilitator result before nonce is consumed by the server
+  const facResp = await fetch(`${API_BASE}/api/facilitator/verify`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(lastPayload),
+  });
+  window._facilitatorResult = await facResp.json();
+
   const resp = await fetch(`${API_BASE}/api/server/weather`, {
     headers: { 'X-PAYMENT': lastXPayment },
   });
@@ -326,13 +334,7 @@ ${hlJson({
 async function runStep6() {
   setNextBtn('验证中…', true);
 
-  // Call facilitator directly so we get the checks array
-  const resp = await fetch(`${API_BASE}/api/facilitator/verify`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(lastPayload),
-  });
-  const result = await resp.json();
+  const result = window._facilitatorResult;
 
   for (let i = 0; i < result.checks.length; i++) {
     await addCheckItem('facilitator', result.checks[i].name, result.checks[i].passed, i * 250);
